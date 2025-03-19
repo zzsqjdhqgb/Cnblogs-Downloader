@@ -9,12 +9,8 @@
 // @grant        none
 // ==/UserScript==
 
-(async function() {
+(async () => {
     'use strict';
-    const Handler = (function() {
-        return {
-        }
-    })();
     async function GetDocument() {
         let url = window.location.href;
         // fetch for the main content
@@ -25,6 +21,38 @@
         return main_doc;
     }
     function HTMLElementHandler(element) {
+        const Handler = (() => {
+            function h(element) {
+                function getHeaderLevel(element) {
+                    const tagName = element.tagName;
+                    // 匹配 H1 到 H6
+                    const match = tagName.match(/^H([1-6])$/);
+                    if (match) {
+                        // 提取数字部分并转换为整数
+                        return parseInt(match[1], 10);
+                    }
+                    return null; // 如果不是<h1>到<h6>，返回null
+                }
+                const level = getHeaderLevel(element);
+                if (level) {
+                    return `${"#".repeat(level)} ${HTMLElementHandler(element)}\n`;
+                }
+            }
+            function p(element) {
+                return `${HTMLElementHandler(element)}\n`;
+            }
+            return {
+                "H1": h,
+                "H2": h,
+                "H3": h,
+                "H4": h,
+                "H5": h,
+                "H6": h,
+                "P": p,
+            }
+        })();
+        
+        // develop here
     }
     async function GenerateMarkdown(main_doc) {
         let doc_info = {
@@ -33,6 +61,17 @@
         };
         const post_doc = main_doc.querySelector("#topics > .post");
         console.debug(post_doc);
+
+        // get post title
+        const post_title = post_doc.querySelector(".postTitle > a > span").textContent;
+        doc_info.filename = post_title + ".md";
+        doc_info.file_content += `# ${post_title}\n`;
+
+        // get post body
+        const post_body = post_doc.querySelector("#cnblogs_post_body");
+        console.debug(post_body);
+
+        doc_info.file_content += HTMLElementHandler(post_body);
     }
     const main_doc = await GetDocument();
     GenerateMarkdown(main_doc);
