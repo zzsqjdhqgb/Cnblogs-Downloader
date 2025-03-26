@@ -29,10 +29,10 @@
         const main_doc = parser.parseFromString(data, "text/html");
         return main_doc;
     }
-    function HTMLElementHandler(element) {
-        let blank_size = 4;
+    function HTMLElementHandler(element, endl) {
+        const blank_size = 4;
         const Handler = (() => {
-            function h(element) {
+            function h(element, endl) {
                 function getHeaderLevel(element) {
                     const tagName = element.tagName;
                     // 匹配 H1 到 H6
@@ -45,49 +45,84 @@
                 }
                 const level = getHeaderLevel(element);
                 if (level) {
-                    return `${"#".repeat(level)} ${HTMLElementHandler(element)}\n\n`;
+                    return `${"#".repeat(level)} ${HTMLElementHandler(element, endl)}${endl}`;
                 }
             }
-            function p(element) {
-                return `${HTMLElementHandler(element)}\n\n`;
+            function p(element, endl) {
+                return `${HTMLElementHandler(element, endl)}${endl}`;
             }
-            function a(element) {
-                return `[${HTMLElementHandler(element)}](${element.href})`;
+            function a(element, endl) {
+                return `[${HTMLElementHandler(element, endl)}](${element.href})`;
             }
-            function s(element) {
-                return `~~${HTMLElementHandler(element)}~~`;
+            function img(element, endl) {
+                return `![${element.alt}](${element.src})`;
             }
-            function blockquote(element) {
-                let content = HTMLElementHandler(element);
+            function s(element, endl) {
+                return `~~${HTMLElementHandler(element, endl)}~~`;
+            }
+            function blockquote(element, endl) {
+                let content = HTMLElementHandler(element, endl);
                 let lines = content.split(/\r?\n/);
                 let res = "";
-                console.log(lines);
-                for (let i = 0; i < lines.length - 1; i++) {
-                    res += Placeholder(">", blank_size) + lines[i] + "\n";
+                for (let i = 0; i < lines.length - 2; i++) {
+                    if (i) res += "\n";
+                    res += Placeholder(">", blank_size) + lines[i];
                 }
-                res += "\n";
+                res += endl;
                 return res;
             }
-            function strong(element) {
-                return `**${HTMLElementHandler(element)}**`;
+            function strong(element, endl) {
+                return `**${HTMLElementHandler(element, endl)}**`;
             }
-            function em(element) {
-                return `*${HTMLElementHandler(element)}*`;
+            function em(element, endl) {
+                return `*${HTMLElementHandler(element, endl)}*`;
             }
-            function ol(element) {
+            function ol(element, endl) {
                 let res = "";
                 let cnt = 1;
                 element.childNodes.forEach((child) => {
-                    let cur = HTMLElementHandler(child);
-                    let lines = cur.split(/\r?\n/);
+                    if (child.tagName != "LI") {
+                        if (child.nodeType != Node.TEXT_NODE || child.textContent.trim() != "") console.error("Not LI element found in OL element");
+                        return;
+                    }
+                    let content = HTMLElementHandler(child, "\n");
+                    let lines = content.split(/\r?\n/);
                     res += `${Placeholder(cnt.toString() + ".", blank_size)} ${lines[0]}\n`;
                     cnt++;
                     for (let i = 1; i < lines.length - 1; i++) {
                         res += `${Placeholder("", blank_size)} ${lines[i]}\n`;
                     }
                 });
-                //developing
+                // is this OK ? 
+                res += "\n";
                 return res;
+            }
+            function ul(element, endl) {
+                let res = "";
+                element.childNodes.forEach((child) => {
+                    if (child.tagName != "LI") {
+                        if (child.nodeType != Node.TEXT_NODE || child.textContent.trim() != "") console.error("Not LI element found in UL element");
+                        return;
+                    }
+                    let content = HTMLElementHandler(child, "\n");
+                    let lines = content.split(/\r?\n/);
+                    res += `${Placeholder("-", blank_size)} ${lines[0]}\n`;
+                    for (let i = 1; i < lines.length - 1; i++) {
+                        res += `${Placeholder("", blank_size)} ${lines[i]}\n`;
+                    }
+                });
+                res += "\n";
+                return res;
+            }
+            function code(element, endl) {
+                return `${'`'}${HTMLElementHandler(element, endl)}${'`'}`;
+            }
+            function br(element, endl) {
+                return endl;
+            }
+            function hr(element, endl) {
+                if (element.className == "footnotes-sep") return "";
+                return `---${endl}`;
             }
 
             return {
@@ -103,7 +138,12 @@
                 "BLOCKQUOTE": blockquote,
                 "STRONG": strong,
                 "EM": em,
-                "OL": ol
+                "BR": br,
+                "HR": hr,
+                "OL": ol,
+                "UL": ul,
+                "CODE": code,
+                "IMG": img,
             }
         })();
 
@@ -111,14 +151,15 @@
 
         element.childNodes.forEach((child) => {
             if (child.nodeType === Node.TEXT_NODE) {
-                if (child.textContent.trim() === "") {
-                    return;
-                }
-                res += child.textContent;
+                let text = child.textContent.replace(/\r?\n/g, "");
+                res += text;
+                // console.debug(text);
             } else {
                 const handler = Handler[child.tagName];
                 if (handler) {
-                    res += handler(child);
+                    res += handler(child, endl);
+                } else {
+                    console.error("No handler found for element", child);
                 }
             }
         });
@@ -141,9 +182,9 @@
 
         // get post body
         const post_body = post_doc.querySelector("#cnblogs_post_body");
-        console.debug(post_body);
+        console.log(post_body);
 
-        doc_info.file_content += HTMLElementHandler(post_body);
+        doc_info.file_content += HTMLElementHandler(post_body, "\n\n");
         window.myvar = post_body
         console.log(doc_info.file_content);
     }
