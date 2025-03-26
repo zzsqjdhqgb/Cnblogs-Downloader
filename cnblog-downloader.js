@@ -11,6 +11,15 @@
 
 (async () => {
     'use strict';
+    function Placeholder(text, num) {
+        let len = text.length;
+        let res = text;
+        for (let i = 0; i < num - len; i++) {
+            res += " ";
+        }
+        return res;
+    }
+
     async function GetDocument() {
         let url = window.location.href;
         // fetch for the main content
@@ -21,6 +30,7 @@
         return main_doc;
     }
     function HTMLElementHandler(element) {
+        let blank_size = 4;
         const Handler = (() => {
             function h(element) {
                 function getHeaderLevel(element) {
@@ -35,12 +45,51 @@
                 }
                 const level = getHeaderLevel(element);
                 if (level) {
-                    return `${"#".repeat(level)} ${HTMLElementHandler(element)}\n`;
+                    return `${"#".repeat(level)} ${HTMLElementHandler(element)}\n\n`;
                 }
             }
             function p(element) {
-                return `${HTMLElementHandler(element)}\n`;
+                return `${HTMLElementHandler(element)}\n\n`;
             }
+            function a(element) {
+                return `[${HTMLElementHandler(element)}](${element.href})`;
+            }
+            function s(element) {
+                return `~~${HTMLElementHandler(element)}~~`;
+            }
+            function blockquote(element) {
+                let content = HTMLElementHandler(element);
+                let lines = content.split(/\r?\n/);
+                let res = "";
+                console.log(lines);
+                for (let i = 0; i < lines.length - 1; i++) {
+                    res += Placeholder(">", blank_size) + lines[i] + "\n";
+                }
+                res += "\n";
+                return res;
+            }
+            function strong(element) {
+                return `**${HTMLElementHandler(element)}**`;
+            }
+            function em(element) {
+                return `*${HTMLElementHandler(element)}*`;
+            }
+            function ol(element) {
+                let res = "";
+                let cnt = 1;
+                element.childNodes.forEach((child) => {
+                    let cur = HTMLElementHandler(child);
+                    let lines = cur.split(/\r?\n/);
+                    res += `${Placeholder(cnt.toString() + ".", blank_size)} ${lines[0]}\n`;
+                    cnt++;
+                    for (let i = 1; i < lines.length - 1; i++) {
+                        res += `${Placeholder("", blank_size)} ${lines[i]}\n`;
+                    }
+                });
+                //developing
+                return res;
+            }
+
             return {
                 "H1": h,
                 "H2": h,
@@ -49,9 +98,32 @@
                 "H5": h,
                 "H6": h,
                 "P": p,
+                "A": a,
+                "S": s,
+                "BLOCKQUOTE": blockquote,
+                "STRONG": strong,
+                "EM": em,
+                "OL": ol
             }
         })();
-        
+
+        let res = "";
+
+        element.childNodes.forEach((child) => {
+            if (child.nodeType === Node.TEXT_NODE) {
+                if (child.textContent.trim() === "") {
+                    return;
+                }
+                res += child.textContent;
+            } else {
+                const handler = Handler[child.tagName];
+                if (handler) {
+                    res += handler(child);
+                }
+            }
+        });
+
+        return res;
         // develop here
     }
     async function GenerateMarkdown(main_doc) {
@@ -65,13 +137,15 @@
         // get post title
         const post_title = post_doc.querySelector(".postTitle > a > span").textContent;
         doc_info.filename = post_title + ".md";
-        doc_info.file_content += `# ${post_title}\n`;
+        doc_info.file_content += `# ${post_title}\n\n`;
 
         // get post body
         const post_body = post_doc.querySelector("#cnblogs_post_body");
         console.debug(post_body);
 
         doc_info.file_content += HTMLElementHandler(post_body);
+        window.myvar = post_body
+        console.log(doc_info.file_content);
     }
     const main_doc = await GetDocument();
     GenerateMarkdown(main_doc);
