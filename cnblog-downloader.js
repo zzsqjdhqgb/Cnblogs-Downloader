@@ -11,15 +11,6 @@
 
 (async () => {
     'use strict';
-    function Placeholder(text, num) {
-        let len = text.length;
-        let res = text;
-        for (let i = 0; i < num - len; i++) {
-            res += " ";
-        }
-        return res;
-    }
-
     async function GetDocument() {
         let url = window.location.href;
         // fetch for the main content
@@ -29,55 +20,54 @@
         const main_doc = parser.parseFromString(data, "text/html");
         return main_doc;
     }
-    function HTMLElementHandler(element, endl) {
+    function HTMLElementHandler(element) {
         const blank_size = 4;
+        const init_state = {
+            double_br: true,
+            in_pre: false,
+            line_pre: ""
+        }
+        function PlaceHolder(text, num) {
+            let len = text.length;
+            return `${text}${" ".repeat(num - len)}`;
+        }
+        function AddLine(line, state) {
+            return `${state.line_pre}${line}\n${state.double_br ? `${state.line_pre}\n` : ""}`;
+        }
         const Handler = (() => {
-            function h(element, endl) {
+            function h(element, state) {
                 function getHeaderLevel(element) {
                     const tagName = element.tagName;
-                    // 匹配 H1 到 H6
                     const match = tagName.match(/^H([1-6])$/);
-                    if (match) {
-                        // 提取数字部分并转换为整数
-                        return parseInt(match[1], 10);
-                    }
-                    return null; // 如果不是<h1>到<h6>，返回null
+                    return parseInt(match[1], 10);
                 }
                 const level = getHeaderLevel(element);
-                if (level) {
-                    return `${"#".repeat(level)} ${HTMLElementHandler(element, endl)}${endl}`;
-                }
+                return AddLine(`${"#".repeat(level)} ${HTMLElementHandler(element, state)}`, state);
             }
-            function p(element, endl) {
-                return `${HTMLElementHandler(element, endl)}${endl}`;
+            function p(element, state) {
+                return AddLine(HTMLElementHandler(element, state), state);
             }
-            function a(element, endl) {
-                return `[${HTMLElementHandler(element, endl)}](${element.href})`;
+            function a(element, state) {
+                return `[${HTMLElementHandler(element, state)}](${element.href})`;
             }
-            function img(element, endl) {
+            function img(element, state) {
                 return `![${element.alt}](${element.src})`;
             }
-            function s(element, endl) {
-                return `~~${HTMLElementHandler(element, endl)}~~`;
+            function s(element, state) {
+                return `~~${HTMLElementHandler(element, state)}~~`;
             }
-            function blockquote(element, endl) {
-                let content = HTMLElementHandler(element, endl);
-                let lines = content.split(/\r?\n/);
-                let res = "";
-                for (let i = 0; i < lines.length - 2; i++) {
-                    if (i) res += "\n";
-                    res += Placeholder(">", blank_size) + lines[i];
-                }
-                res += endl;
+            function blockquote(element, state) {
+                let new_state = { ...state };
+                new_state.line_pre = PlaceHolder(">", blank_size);
                 return res;
             }
-            function strong(element, endl) {
-                return `**${HTMLElementHandler(element, endl)}**`;
+            function strong(element, state) {
+                return `**${HTMLElementHandler(element, state)}**`;
             }
-            function em(element, endl) {
-                return `*${HTMLElementHandler(element, endl)}*`;
+            function em(element, state) {
+                return `*${HTMLElementHandler(element, state)}*`;
             }
-            function ol(element, endl) {
+            function ol(element, state) {
                 let res = "";
                 let cnt = 1;
                 element.childNodes.forEach((child) => {
@@ -85,42 +75,42 @@
                         if (child.nodeType != Node.TEXT_NODE || child.textContent.trim() != "") console.error("Not LI element found in OL element");
                         return;
                     }
-                    let content = HTMLElementHandler(child, "\n");
+                    let content = HTMLElementHandler(child, state);
                     let lines = content.split(/\r?\n/);
-                    res += `${Placeholder(cnt.toString() + ".", blank_size)} ${lines[0]}\n`;
+                    res += `${PlaceHolder(cnt.toString() + ".", blank_size)} ${lines[0]}\n`;
                     cnt++;
                     for (let i = 1; i < lines.length - 1; i++) {
-                        res += `${Placeholder("", blank_size)} ${lines[i]}\n`;
+                        res += `${PlaceHolder("", blank_size)} ${lines[i]}\n`;
                     }
                 });
                 // is this OK ? 
                 res += "\n";
                 return res;
             }
-            function ul(element, endl) {
+            function ul(element, state) {
                 let res = "";
                 element.childNodes.forEach((child) => {
                     if (child.tagName != "LI") {
                         if (child.nodeType != Node.TEXT_NODE || child.textContent.trim() != "") console.error("Not LI element found in UL element");
                         return;
                     }
-                    let content = HTMLElementHandler(child, "\n");
+                    let content = HTMLElementHandler(child, state);
                     let lines = content.split(/\r?\n/);
-                    res += `${Placeholder("-", blank_size)} ${lines[0]}\n`;
+                    res += `${PlaceHolder("-", blank_size)} ${lines[0]}\n`;
                     for (let i = 1; i < lines.length - 1; i++) {
-                        res += `${Placeholder("", blank_size)} ${lines[i]}\n`;
+                        res += `${PlaceHolder("", blank_size)} ${lines[i]}\n`;
                     }
                 });
                 res += "\n";
                 return res;
             }
-            function code(element, endl) {
+            function code(element, state) {
                 return `${'`'}${HTMLElementHandler(element, endl)}${'`'}`;
             }
-            function br(element, endl) {
+            function br(element, state) {
                 return endl;
             }
-            function hr(element, endl) {
+            function hr(element, state) {
                 if (element.className == "footnotes-sep") return "";
                 return `---${endl}`;
             }
