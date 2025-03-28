@@ -5,8 +5,8 @@
 // @description  下载博客园的文章为 Markdown 文件，目前仅为功能不完整的临时版本
 // @author       zzsqjdhqgb
 // @match        https://www.cnblogs.com/*
-// // @icon         https://www.google.com/s2/favicons?sz=64&domain=cnblogs.com
 // @grant        none
+// @updateURL    https://zzsqjdhqgb.github.io/Cnblogs-Downloader/CnblogDownloader.js
 // ==/UserScript==
 
 (async () => {
