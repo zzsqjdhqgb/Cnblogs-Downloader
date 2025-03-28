@@ -20,76 +20,81 @@
         const main_doc = parser.parseFromString(data, "text/html");
         return main_doc;
     }
-    function tagFixer(doc) {
-        function fix_endline() {
-            // add endline to the end of each element
-            let elements = doc.children;
-            // merge with "\n" between each element
-            for (let i = 0; i < elements.length; i++) {
-                let element = elements[i];
-                if (i != elements.length - 1) {
-                    element.outerHTML += "\n";
-                }
-            }
-        }
-        function fix_p() {
-            // remove all <p> tags
-            let ps = doc.querySelectorAll("p");
-            for (let p of ps) {
-                p.outerHTML = p.innerHTML;
-            }
-        }
-        function fix_span() {
-            // need to fix: 
-            //     <span class="math inline"> ->  $...$
-            let spans = doc.querySelectorAll("span");
-            for (let span of spans) {
-                if (span.classList.contains("math") && span.classList.contains("inline")) {
-                    span.textContent = `$${span.textContent.slice(2, -2)}$`;
-                }
-            }
-        }
-        function fix_div() {
-            // need to fix: 
-            //     <div class="math display"> ->  $$...$$
-            let divs = doc.querySelectorAll("div");
-            for (let div of divs) {
-                if (div.classList.contains("math") && div.classList.contains("display")) {
-                    div.outerHTML = `$$\n${div.textContent.slice(2, -2)}\n$$`;
-                }
-            }
-        }
-        function fix_code() {
-            // need to fix: 
-            //     <pre><code class="language-xxx"> -> ```xxx
-            //     </code></pre> -> ```
-            let pres = doc.querySelectorAll("pre");
-            for (let pre of pres) {
-                let code = pre.querySelector("code");
-                if (code) {
-                    let lang = code.classList[0].slice(9);
-                    pre.outerHTML = `\`\`\`${lang}\n${code.textContent}\`\`\``;
-                }
-            }
-        }
-        function fix_blockquote() {
-            // need to fix:
-            //     <blockquote> ...\n... -> ...\n\n...
-            //     double every "\n" in <blockquote> to "\n\n"
-            let blockquotes = doc.querySelectorAll("blockquote");
-            for (let blockquote of blockquotes) {
-                blockquote.innerHTML = blockquote.innerHTML.replaceAll("\n", "\n\n");
-            }
-        }
-
-        fix_endline();
-        fix_p();
-        fix_span();
-        fix_div();
-        fix_code();
-        fix_blockquote();
+    async function PageAvailable() {
+        let doc = await GetDocument();
+        if (doc.querySelector("#cnblogs_post_body")) return true;
+        return false;
     }
     function GenerateMarkdown(main_doc) {
+        function tagFixer(doc) {
+            function fix_endline() {
+                // add endline to the end of each element
+                let elements = doc.children;
+                // merge with "\n" between each element
+                for (let i = 0; i < elements.length; i++) {
+                    let element = elements[i];
+                    if (i != elements.length - 1) {
+                        element.outerHTML += "\n";
+                    }
+                }
+            }
+            function fix_p() {
+                // remove all <p> tags
+                let ps = doc.querySelectorAll("p");
+                for (let p of ps) {
+                    p.outerHTML = p.innerHTML;
+                }
+            }
+            function fix_span() {
+                // need to fix: 
+                //     <span class="math inline"> ->  $...$
+                let spans = doc.querySelectorAll("span");
+                for (let span of spans) {
+                    if (span.classList.contains("math") && span.classList.contains("inline")) {
+                        span.outerHTML = `$${span.textContent.slice(2, -2)}$`;
+                    }
+                }
+            }
+            function fix_div() {
+                // need to fix: 
+                //     <div class="math display"> ->  $$...$$
+                let divs = doc.querySelectorAll("div");
+                for (let div of divs) {
+                    if (div.classList.contains("math") && div.classList.contains("display")) {
+                        div.outerHTML = `$$\n${div.textContent.slice(2, -2)}\n$$`;
+                    }
+                }
+            }
+            function fix_code() {
+                // need to fix: 
+                //     <pre><code class="language-xxx"> -> ```xxx
+                //     </code></pre> -> ```
+                let pres = doc.querySelectorAll("pre");
+                for (let pre of pres) {
+                    let code = pre.querySelector("code");
+                    if (code) {
+                        let lang = code.classList[0].slice(9);
+                        pre.outerHTML = `\`\`\`${lang}\n${code.textContent}\`\`\``;
+                    }
+                }
+            }
+            function fix_blockquote() {
+                // need to fix:
+                //     <blockquote> ...\n... -> ...\n\n...
+                //     double every "\n" in <blockquote> to "\n\n"
+                let blockquotes = doc.querySelectorAll("blockquote");
+                for (let blockquote of blockquotes) {
+                    blockquote.innerHTML = blockquote.innerHTML.replaceAll("\n", "\n\n");
+                }
+            }
+    
+            fix_endline();
+            fix_p();
+            fix_span();
+            fix_div();
+            fix_code();
+            fix_blockquote();
+        }
         let doc_info = {
             filename: "",
             file_content: ""
@@ -116,14 +121,6 @@
         console.log(doc_info.file_content);
 
         return doc_info;
-
-        // // download
-        // const blob = new Blob([doc_info.file_content], {type: "text/plain"});
-        // const url = URL.createObjectURL(blob);
-        // const a = document.createElement("a");
-        // a.href = url;
-        // a.download = doc_info.filename;
-        // a.click();
     }
 
     function InitUI() {
@@ -256,5 +253,7 @@
         }
     }
 
-    InitUI();
+    if (await PageAvailable()) {
+        InitUI();
+    }
 })();
