@@ -22,6 +22,7 @@
     }
     async function PageAvailable() {
         let doc = await GetDocument();
+        window.mydebugvar = doc;
         if (doc.querySelector("#cnblogs_post_body")) return true;
         return false;
     }
@@ -73,7 +74,7 @@
                 for (let pre of pres) {
                     let code = pre.querySelector("code");
                     if (code) {
-                        let lang = code.classList[0].slice(9);
+                        let lang = code.classList[0] ? code.classList[0].slice(9) : "";
                         pre.outerHTML = `\`\`\`${lang}\n${code.textContent}\`\`\``;
                     }
                 }
