@@ -35,6 +35,19 @@ aaa
 
 `code`
 
+this is $inline\ math\ such\ as\ \frac a b$
+
+$$
+this\ is\ math\\
+
+block\\
+
+such\ as\\
+
+\frac a b
+$$
+
+
 ---
 
 (seperate line above)
