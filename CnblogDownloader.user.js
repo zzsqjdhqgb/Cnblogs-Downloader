@@ -53,7 +53,7 @@
                 let spans = doc.querySelectorAll("span");
                 for (let span of spans) {
                     if (span.classList.contains("math") && span.classList.contains("inline")) {
-                        span.outerHTML = `$${span.textContent.slice(2, -2)}$`;
+                        span.replaceWith(document.createTextNode(`$${span.textContent.slice(2, -2)}$`));
                     }
                 }
             }
@@ -63,7 +63,10 @@
                 let divs = doc.querySelectorAll("div");
                 for (let div of divs) {
                     if (div.classList.contains("math") && div.classList.contains("display")) {
-                        div.outerHTML = `$$\n${div.textContent.slice(2, -2)}\n$$`;
+                        // console.debug(div.textContent.slice(2, -2));
+                        div.replaceWith(document.createTextNode(`$$\n${div.textContent.slice(2, -2)}\n$$`));
+                        // console.debug(`$$\n${div.textContent.slice(2, -2)}\n$$`);
+                        // console.debug(div.outerHTML);
                     }
                 }
             }
@@ -76,7 +79,8 @@
                     let code = pre.querySelector("code");
                     if (code) {
                         let lang = code.classList[0] ? code.classList[0].slice(9) : "";
-                        pre.outerHTML = `\`\`\`${lang}\n${code.textContent}\`\`\``;
+                        pre.replaceWith(document.createTextNode(`\`\`\`${lang}\n${code.textContent}\n\`\`\``));
+                        // pre.outerHTML = `\`\`\`${lang}\n${code.textContent}\`\`\``;
                     }
                 }
             }
@@ -99,6 +103,10 @@
             fix_p();
             fix_span();
             fix_div();
+            console.debug(doc.innerHTML);
+            setTimeout(() => {
+                console.debug(doc.innerHTML);
+            }, 1000);
             fix_code();
             fix_blockquote();
         }
