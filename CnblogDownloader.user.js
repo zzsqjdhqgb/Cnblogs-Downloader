@@ -91,7 +91,7 @@
                     content = content.replace(/^\n/, "").replace(/\n$/, "");
                     // replace all \n with <br>
                     content = content.replace(/\n/g, "<br>");
-                    blockquote.outerHTML = `\n\n${content}\n\n`;
+                    blockquote.innerHTML = `\n\n${content}\n\n`;
                 }
             }
     
