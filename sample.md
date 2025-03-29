@@ -22,7 +22,8 @@ aaa
 >   for
 >
 >   for
->   
+>
+>   $this\ is \frac{inline}{math}$
 
 1. First item
     1ioheiu
