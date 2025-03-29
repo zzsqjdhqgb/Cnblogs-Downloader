@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Cnblog Downloader (DEBUG)
 // @namespace    https://github.com/zzsqjdhqgb/
-// @version      0.1.1
+// @version      0.1.1.1
 // @description  下载博客园的文章为 Markdown 文件，目前仅为功能不完整的临时版本
 // @author       zzsqjdhqgb
 // @match        https://www.cnblogs.com/*
@@ -91,7 +91,7 @@
                     content = content.replace(/^\n/, "").replace(/\n$/, "");
                     // replace all \n with <br>
                     content = content.replace(/\n/g, "<br>");
-                    blockquote.outerHTML = `\n\n${content}\n\n`;
+                    blockquote.innerHTML = `\n\n${content}\n\n`;
                 }
             }
     
