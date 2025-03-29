@@ -6,8 +6,8 @@
 // @author       zzsqjdhqgb
 // @match        https://www.cnblogs.com/*
 // @grant        none
-// @updateURL    https://zzsqjdhqgb.github.io/Cnblogs-Downloader/DEBUG/CnblogDownloader.js
-// @downloadURL    https://zzsqjdhqgb.github.io/Cnblogs-Downloader/DEBUG/CnblogDownloader.js
+// @updateURL    https://zzsqjdhqgb.github.io/Cnblogs-Downloader/DEBUG/CnblogDownloader.user.js
+// @downloadURL    https://zzsqjdhqgb.github.io/Cnblogs-Downloader/DEBUG/CnblogDownloader.user.js
 // ==/UserScript==
 
 (async () => {
