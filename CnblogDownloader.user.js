@@ -83,10 +83,15 @@
             function fix_blockquote() {
                 // need to fix:
                 //     <blockquote> ...\n... -> ...\n\n...
-                //     double every "\n" in <blockquote> to "\n\n"
+                //     replace all \n with <br> in blockquote; simple remove the firstand last "\n" with out adding <br>
                 let blockquotes = doc.querySelectorAll("blockquote");
                 for (let blockquote of blockquotes) {
-                    blockquote.innerHTML = blockquote.innerHTML.replaceAll("\n", "\n\n");
+                    let content = blockquote.innerHTML;
+                    // remove the first and last "\n"
+                    content = content.replace(/^\n/, "").replace(/\n$/, "");
+                    // replace all \n with <br>
+                    content = content.replace(/\n/g, "<br>");
+                    blockquote.outerHTML = `\n\n${content}\n\n`;
                 }
             }
     
