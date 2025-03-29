@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Cnblog Downloader
 // @namespace    https://github.com/zzsqjdhqgb/
-// @version      0.1.2
+// @version      0.1.3
 // @description  下载博客园的文章为 Markdown 文件，目前仅为功能不完整的临时版本
 // @author       zzsqjdhqgb
 // @match        https://www.cnblogs.com/*
@@ -94,13 +94,46 @@
                     blockquote.outerHTML = `\n\n${content}\n\n`;
                 }
             }
-    
+
             fix_endline();
             fix_p();
             fix_span();
             fix_div();
             fix_code();
             fix_blockquote();
+        }
+        function decodeHTMLEntities(str) {
+            // 基础实体映射表（命名实体 -> 符号）:cite[2]:cite[7]
+            const entityMap = {
+                // 控制字符（0-31）
+                '&nbsp;': ' ', '&shy;': '\xAD',
+
+                // 可打印字符（32-126）
+                '&quot;': '"', '&amp;': '&', '&apos;': "'", '&lt;': '<', '&gt;': '>',
+                '&excl;': '!', '&num;': '#', '&dollar;': '$', '&percnt;': '%', '&commat;': '@',
+                '&lpar;': '(', '&rpar;': ')', '&ast;': '*', '&plus;': '+', '&comma;': ',',
+                '&minus;': '-', '&period;': '.', '&sol;': '/', '&colon;': ':', '&semi;': ';',
+                '&equals;': '=', '&quest;': '?', '&lsqb;': '[', '&bsol;': '\\', '&rsqb;': ']',
+                '&circ;': '^', '&lowbar;': '_', '&lcub;': '{', '&verbar;': '|', '&rcub;': '}',
+                '&tilde;': '~'
+            };
+
+            // 处理命名实体（不区分大小写）:cite[7]
+            const namedEntityRegex = /&([a-z]+);/gi;
+            str = str.replace(namedEntityRegex, (match, entity) => {
+                const lowerEntity = entity.toLowerCase();
+                const normalizedEntity = `&${lowerEntity};`;
+                return entityMap[normalizedEntity] || match; // 未匹配则保留原实体
+            });
+
+            // 处理数字实体（如 &#65; 或 &#x41;）:cite[7]
+            const numericEntityRegex = /&#(\d+);|&#x([0-9a-f]+);/gi;
+            str = str.replace(numericEntityRegex, (match, dec, hex) => {
+                const codePoint = dec ? parseInt(dec, 10) : parseInt(hex, 16);
+                return codePoint >= 0 ? String.fromCodePoint(codePoint) : match;
+            });
+
+            return str;
         }
         let doc_info = {
             filename: "",
@@ -125,6 +158,8 @@
         console.log(fixed_post_body);
 
         doc_info.file_content += fixed_post_body.innerHTML;
+        // decode html entities
+        doc_info.file_content = decodeHTMLEntities(doc_info.file_content);
         console.log(doc_info.file_content);
 
         return doc_info;
