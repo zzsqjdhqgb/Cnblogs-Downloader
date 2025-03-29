@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Cnblog Downloader
 // @namespace    https://github.com/zzsqjdhqgb/
-// @version      0.1.1
+// @version      0.1.2
 // @description  下载博客园的文章为 Markdown 文件，目前仅为功能不完整的临时版本
 // @author       zzsqjdhqgb
 // @match        https://www.cnblogs.com/*
@@ -83,10 +83,15 @@
             function fix_blockquote() {
                 // need to fix:
                 //     <blockquote> ...\n... -> ...\n\n...
-                //     double every "\n" in <blockquote> to "\n\n"
+                //     replace all \n with <br> in blockquote; simple remove the first found and last found "\n" with out adding <br>
                 let blockquotes = doc.querySelectorAll("blockquote");
                 for (let blockquote of blockquotes) {
-                    blockquote.innerHTML = blockquote.innerHTML.replaceAll("\n", "\n\n");
+                    let content = blockquote.outerHTML;
+                    // remove the first found and last found "\n" with out adding <br>
+                    content = content.replace("\n", "");
+                    // replace all \n with <br>
+                    content = content.replace(/\n/g, "<br>");
+                    blockquote.outerHTML = `\n\n${content}\n\n`;
                 }
             }
     
