@@ -1,6 +1,48 @@
 const TurndownService = require('turndown').default;
-// console.log(TurndownService);
-const turndown = new TurndownService();
+const turndownPluginGfm = require('turndown-plugin-gfm');
+
+const gfm = turndownPluginGfm.gfm;
+const turndown = new TurndownService({
+    headingStyle: 'atx',
+    bulletListMarker: '-',
+    codeBlockStyle: 'fenced',
+    emDelimiter: '*',
+    bulletListMarker: '-',
+    hr: '---',
+});
+turndown.use(gfm);
+
+turndown.addRule('cnblog_strikethrough', {
+    filter: ['s'],
+    replacement: (content) => `~~${content}~~`,
+});
+turndown.addRule('cnblog_inline_math', {
+    filter: function (node) {
+        // 匹配 div 且 class 包含 math display
+        return node.nodeName === 'SPAN' &&
+            node.classList.contains('math') && node.classList.contains('inline');
+    },
+    replacement: (content, node) => {
+        // if (node.classList.contains('math') && node.classList.contains('inline')) {
+        // return raw text 
+        return `$${node.textContent.slice(2, -2)}$`;
+        // }
+        // return content;
+    },
+});
+turndown.addRule('cnblog_block_math', {
+    filter: function (node) {
+        // 匹配 div 且 class 包含 math display
+        return node.nodeName === 'DIV' &&
+            node.classList.contains('math') && node.classList.contains('display');
+    },
+    replacement: (content, node) => {
+        // if (node.classList.contains('math') && node.classList.contains('display')) {
+        return `\n$$\n${node.textContent.slice(2, -2)}\n$$\n`;
+        // }
+        // return content;
+    },
+});
 
 function GenerateMarkdown(main_doc) {
     let doc_info = {

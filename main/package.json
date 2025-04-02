@@ -15,6 +15,7 @@
     "webpack-cli": "^6.0.1"
   },
   "dependencies": {
-    "turndown": "^7.2.0"
+    "turndown": "^7.2.0",
+    "turndown-plugin-gfm": "^1.0.2"
   }
 }

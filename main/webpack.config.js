@@ -3,7 +3,11 @@ const fs = require('fs');
 const TerserPlugin = require('terser-webpack-plugin');
 const webpack = require('webpack');
 
-const TemperMonkeyHeader = fs.readFileSync('./src/temperMonkeyHeader.js', 'utf-8');
+const temperMonkeyHeaderFile = path.resolve(__dirname, './src/temperMonkeyHeader.js');
+const DEBUGtemperMonkeyHeaderFile = path.resolve(__dirname, './src/DEBUGtemperMonkeyHeader.js');
+
+// const TemperMonkeyHeader = fs.readFileSync(DEBUGtemperMonkeyHeaderFile, 'utf-8');
+const TemperMonkeyHeader = fs.readFileSync(temperMonkeyHeaderFile, 'utf-8');
 
 module.exports = {
     entry: './src/main.js',
