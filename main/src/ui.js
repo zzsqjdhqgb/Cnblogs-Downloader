@@ -38,11 +38,37 @@ function InitUI() {
 
 
     function addDynamicRule(selector, styles) {
-        const sheet = document.styleSheets[0];
+        // 寻找一个我们自己创建的、用于动态添加规则的 <style> 元素
+        let styleSheet = document.getElementById('dynamic-styles');
+
+        // 如果这个 <style> 元素不存在，就创建一个
+        if (!styleSheet) {
+            styleSheet = document.createElement('style');
+            styleSheet.id = 'dynamic-styles'; // 给它一个ID，方便下次查找
+            // WebKit需要先将 <style> 元素添加到DOM中才能访问sheet属性
+            document.head.appendChild(styleSheet);
+        }
+
+        // 获取该 <style> 元素对应的 CSSStyleSheet 对象
+        const sheet = styleSheet.sheet;
+
+        // 将样式对象转换为CSS规则字符串
+        // 例如： { color: 'red', 'font-size': '16px' } -> "color:red;font-size:16px"
         const rule = `${selector} { ${Object.entries(styles)
-            .map(([k, v]) => `${k}:${v}`)
+            .map(([key, value]) => {
+                // 将驼峰式CSS属性（如 fontSize）转换为连字符格式（font-size）
+                const cssKey = key.replace(/[A-Z]/g, match => `-${match.toLowerCase()}`);
+                return `${cssKey}: ${value}`;
+            })
             .join(';')} }`;
-        sheet.insertRule(rule, sheet.cssRules.length);
+
+        // 尝试将规则插入到样式表的末尾
+        try {
+            // 使用 sheet.cssRules.length 可以确保新规则添加到最后
+            sheet.insertRule(rule, sheet.cssRules.length);
+        } catch (e) {
+            console.error("无法插入CSS规则: ", e);
+        }
     }
 
     // 使用示例
